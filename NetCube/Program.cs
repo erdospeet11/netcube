@@ -8,8 +8,7 @@ using System.Drawing;
 
 namespace Game;
 
-public class Program
-{
+public class Program {
     private static void KeyDown(IKeyboard keyboard, Key key, int keyCode) { 
         Console.WriteLine(key);
 
@@ -91,16 +90,55 @@ public class Program
         _gl.GetShader(vertexShader, ShaderParameterName.CompileStatus, out int vStatus);
 
         if (vStatus != (int) GLEnum.True)
+        {
             throw new Exception("Vertex shader failed to compile: " + _gl.GetShaderInfoLog(vertexShader));
+        }
 
+        uint fragmentShader = _gl.CreateShader(ShaderType.FragmentShader);
+        _gl.ShaderSource(fragmentShader, fragmentCode);
+
+        _gl.CompileShader(fragmentShader);
+
+        _gl.GetShader(fragmentShader, ShaderParameterName.CompileStatus, out int fStatus);
+        if (fStatus != (int) GLEnum.True)
+            throw new Exception("Fragment shader failed to compile: " + _gl.GetShaderInfoLog(fragmentShader));
+
+        _program = _gl.CreateProgram();
+
+        _gl.AttachShader(_program, vertexShader);
+        _gl.AttachShader(_program, fragmentShader);
+
+        _gl.LinkProgram(_program);
+
+        _gl.GetProgram(_program, ProgramPropertyARB.LinkStatus, out int lStatus);
+        if (lStatus != (int) GLEnum.True)
+            throw new Exception("Program failed to link: " + _gl.GetProgramInfoLog(_program));
+
+        _gl.DetachShader(_program, vertexShader);
+        _gl.DetachShader(_program, fragmentShader);
+        _gl.DeleteShader(vertexShader);
+        _gl.DeleteShader(fragmentShader);
+
+        const uint positionLoc = 0;
+        _gl.EnableVertexAttribArray(positionLoc);
+        _gl.VertexAttribPointer(positionLoc, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), (void*) 0);
+
+        _gl.BindVertexArray(0);
+        _gl.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
+        _gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);
+    }
 
     private static void OnUpdate(double deltaTime) { 
         //Console.WriteLine("Update!");
     }
 
-    private static void OnRender(double deltaTime) { 
+    private static unsafe void OnRender(double deltaTime) { 
         //Console.WriteLine("Render!");
         _gl.Clear(ClearBufferMask.ColorBufferBit);
+
+        _gl.BindVertexArray(_vao);
+        _gl.UseProgram(_program);
+        _gl.DrawElements(PrimitiveType.Triangles, 6, DrawElementsType.UnsignedInt, (void*) 0);
     }
 
     private static IWindow _window;
@@ -108,6 +146,7 @@ public class Program
     private static uint _vao;
     private static uint _vbo;
     private static uint _ebo;
+    private static uint _program;
 
     public static void Main(string[] args) { 
         WindowOptions options = WindowOptions.Default with

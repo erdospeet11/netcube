@@ -34,11 +34,14 @@ public class Program {
 
         _gl.BindVertexArray(_vao);
 
-        float[] vertices = {
-            0.5f,  0.5f, 0.0f,
-            0.5f, -0.5f, 0.0f,
-            -0.5f, -0.5f, 0.0f,
-            -0.5f,  0.5f, 0.0f
+        // The quad vertices data. Now with Texture coordinates!
+        float[] vertices =
+        {
+        //       aPosition     | aTexCoords
+            0.5f,  0.5f, 0.0f,  1.0f, 1.0f,
+            0.5f, -0.5f, 0.0f,  1.0f, 0.0f,
+            -0.5f, -0.5f, 0.0f,  0.0f, 0.0f,
+            -0.5f,  0.5f, 0.0f,  0.0f, 1.0f
         };
 
         _vbo = _gl.GenBuffer();
@@ -121,7 +124,8 @@ public class Program {
 
         const uint positionLoc = 0;
         _gl.EnableVertexAttribArray(positionLoc);
-        _gl.VertexAttribPointer(positionLoc, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), (void*) 0);
+        //                       3 floats for position + 2 floats for texture coordinates! \/
+        _gl.VertexAttribPointer(positionLoc, 3, VertexAttribPointerType.Float, false, 5 * sizeof(float), (void*)0);
 
         _gl.BindVertexArray(0);
         _gl.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
